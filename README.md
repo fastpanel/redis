@@ -3,6 +3,14 @@ Extension to work with the "Redis" service.
 
 ---
 
+## Env
+
+``` dotenv
+
+```
+
+---
+
 ## License
 The MIT License (MIT)
 

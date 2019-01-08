@@ -29,7 +29,7 @@ class Extension extends core_1.Extensions.ExtensionDefines {
         this.di.set('redis', (di, params) => {
             let config = di
                 .get('config')
-                .get('Extensions/Redis', Const_1.REDIS_CONFIG);
+                .get('Ext/Redis', Const_1.REDIS_CONFIG);
             if (typeof params.host !== 'undefined' ||
                 typeof params.hosts !== 'undefined') {
                 config = params;
@@ -51,9 +51,9 @@ class Extension extends core_1.Extensions.ExtensionDefines {
         this.events.on('app:getSetupSubscriptions', (list) => {
             list.push(async (command, args) => {
                 /* Check and create default config file. */
-                if (!this.config.get('Extensions/Redis', false)) {
-                    this.config.set('Extensions/Redis', Const_1.REDIS_CONFIG);
-                    this.config.save('Extensions/Redis', true);
+                if (!this.config.get('Ext/Redis', false)) {
+                    this.config.set('Ext/Redis', Const_1.REDIS_CONFIG);
+                    this.config.save('Ext/Redis', true);
                 }
             });
         });

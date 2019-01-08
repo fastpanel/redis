@@ -28,7 +28,7 @@ export class Extension extends Extensions.ExtensionDefines {
     this.di.set('redis', (di: Di.Container, params: any) => {
       let config: any = di
         .get('config')
-        .get('Extensions/Redis', REDIS_CONFIG);
+        .get('Ext/Redis', REDIS_CONFIG);
 
       if (
         typeof params.host !== 'undefined' || 
@@ -66,9 +66,9 @@ export class Extension extends Extensions.ExtensionDefines {
     this.events.on('app:getSetupSubscriptions', (list: Array<Cli.CommandSubscriptionDefines>) => {
       list.push(async (command: Vorpal.CommandInstance, args?: any) => {
         /* Check and create default config file. */
-        if (!this.config.get('Extensions/Redis', false)) {
-          this.config.set('Extensions/Redis', REDIS_CONFIG);
-          this.config.save('Extensions/Redis', true);
+        if (!this.config.get('Ext/Redis', false)) {
+          this.config.set('Ext/Redis', REDIS_CONFIG);
+          this.config.save('Ext/Redis', true);
         }
       });
     });
