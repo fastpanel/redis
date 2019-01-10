@@ -46,16 +46,9 @@ class Extension extends core_1.Extensions.ExtensionDefines {
         }, false);
         /* --------------------------------------------------------------------- */
         /* Registered cli commands. */
-        this.events.once('cli:getCommands', async (cli) => { });
-        /* Install and configure the basic components of the system. */
-        this.events.on('app:getSetupSubscriptions', (list) => {
-            list.push(async (command, args) => {
-                /* Check and create default config file. */
-                if (!this.config.get('Ext/Redis', false)) {
-                    this.config.set('Ext/Redis', Const_1.REDIS_CONFIG);
-                    this.config.save('Ext/Redis', true);
-                }
-            });
+        this.events.once('cli:getCommands', async (cli) => {
+            const { Setup } = require('./Commands/Setup');
+            await (new Setup(this.di)).initialize();
         });
     }
     /**

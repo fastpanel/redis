@@ -7,7 +7,7 @@
  */
 
 import Redis from 'ioredis';
-import Vorpal from 'vorpal';
+import Caporal from 'caporal';
 import { REDIS_CONFIG } from './Const';
 import { Cli, Di, Extensions } from '@fastpanel/core';
 
@@ -60,17 +60,9 @@ export class Extension extends Extensions.ExtensionDefines {
     /* --------------------------------------------------------------------- */
     
     /* Registered cli commands. */
-    this.events.once('cli:getCommands', async (cli: Vorpal) => {});
-
-    /* Install and configure the basic components of the system. */
-    this.events.on('app:getSetupSubscriptions', (list: Array<Cli.CommandSubscriptionDefines>) => {
-      list.push(async (command: Vorpal.CommandInstance, args?: any) => {
-        /* Check and create default config file. */
-        if (!this.config.get('Ext/Redis', false)) {
-          this.config.set('Ext/Redis', REDIS_CONFIG);
-          this.config.save('Ext/Redis', true);
-        }
-      });
+    this.events.once('cli:getCommands', async (cli: Caporal) => {
+      const { Setup } = require('./Commands/Setup');
+      await (new Setup(this.di)).initialize();
     });
   }
   
