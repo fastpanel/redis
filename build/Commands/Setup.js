@@ -17,12 +17,13 @@ class Setup extends core_1.Cli.CommandDefines {
     /**
      * Initialize a commands provider.
      */
-    async initialize() {
+    initialize() {
         this.cli
-            .command('@fastpanel/redis setup', 'Install redis components.')
-            .option('-f, --force', 'Forced reconfiguration of components.')
+            .command('@fastpanel/redis setup', 'Configure redis components.')
             .option('-e, --env', 'Save as current environment settings.')
+            .option('-f, --force', 'Forced command running.')
             .option('-y, --yes', 'Assume yes if prompted.')
+            .visible(false)
             .action((args, options, logger) => {
             return new Promise(async (resolve, reject) => {
                 logger.debug('@fastpanel/redis setup');
