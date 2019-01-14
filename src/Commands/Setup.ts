@@ -22,7 +22,7 @@ export class Setup extends Cli.CommandDefines {
    */
   public initialize () {
     this.cli
-    .command('@fastpanel/redis setup', 'Configure redis components.')
+    .command('fastpanel/redis setup', 'Configure redis components.')
     .option('-e, --env', 'Save as current environment settings.')
     .option('-f, --force', 'Forced command running.')
     .option('-y, --yes', 'Assume yes if prompted.')
