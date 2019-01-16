@@ -6,6 +6,7 @@
  * @license   MIT
  */
 
+import { EOL } from 'os';
 import Winston from 'winston';
 import { Cli } from '@fastpanel/core';
 import { REDIS_CONFIG } from './../Const';
@@ -25,13 +26,20 @@ export class Setup extends Cli.CommandDefines {
     .command('fastpanel/redis setup', 'Configure redis components.')
     .option('-e, --env', 'Save as current environment settings.')
     .option('-f, --force', 'Forced command running.')
-    .option('-y, --yes', 'Assume yes if prompted.')
     .visible(false)
     .action((args: {[k: string]: any}, options: {[k: string]: any}, logger: Winston.Logger) => {
       return new Promise(async (resolve, reject) => {
-        logger.debug('@fastpanel/redis setup');
-        logger.debug(args);
-        logger.debug(options);
+        /* Info message. */
+        logger.info(`${EOL}Configure redis components.`);
+
+        if (!this.config.get('Ext/Redis', false) || options.force) {
+          
+        } else {
+          /* Info message. */
+          logger.info(` Everything is already configured. ${EOL}`);
+        }
+
+        /* Command complete. */
         resolve();
       });
     });
