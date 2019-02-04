@@ -9,6 +9,7 @@
  * Default redis config.
  */
 export declare const REDIS_CONFIG: {
+    type: string;
     host: string;
     port: number;
     options: {

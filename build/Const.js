@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * Default redis config.
  */
 exports.REDIS_CONFIG = {
+    type: 'default',
     host: '127.0.0.1',
     port: 6379,
     options: {

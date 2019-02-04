@@ -30,18 +30,66 @@ class Extension extends core_1.Extensions.ExtensionDefines {
             let config = di
                 .get('config')
                 .get('Ext/Redis', Const_1.REDIS_CONFIG);
-            if (typeof params.host !== 'undefined' ||
-                typeof params.hosts !== 'undefined') {
+            if (typeof params.type !== 'undefined') {
                 config = params;
             }
-            if (typeof config.host !== 'undefined') {
-                return new ioredis_1.default((config.port) ? config.port : Const_1.REDIS_CONFIG.port, (config.host) ? config.host : Const_1.REDIS_CONFIG.host, (config.options) ? config.options : Const_1.REDIS_CONFIG.options);
+            else if (typeof process.env.REDIS_TYPE !== 'undefined') {
+                switch (process.env.REDIS_TYPE) {
+                    case 'cluster':
+                        let hosts = [];
+                        let hostsTmp = process.env.REDIS_HOSTS.split(';');
+                        /* Get hosts list. */
+                        for (const item of hostsTmp) {
+                            let tmp = item.split(':');
+                            if (tmp.length == 2) {
+                                hosts.push({
+                                    host: tmp[0],
+                                    port: tmp[1]
+                                });
+                            }
+                        }
+                        /* Set params for "cluster" type. */
+                        config = {
+                            type: 'cluster',
+                            hosts: hosts,
+                            options: {}
+                        };
+                        break;
+                    default:
+                        /* Set params for "default" type. */
+                        config = {
+                            type: 'default',
+                            host: process.env.REDIS_HOST,
+                            port: process.env.REDIS_PORT,
+                            options: {}
+                        };
+                        break;
+                }
+                /* Set common params. */
+                config.options = {
+                    family: (process.env.REDIS_OPTIONS_FAMILY)
+                        ? process.env.REDIS_OPTIONS_FAMILY
+                        : di.get('config')
+                            .get('Ext/Redis.options.family', Const_1.REDIS_CONFIG.options.family),
+                    password: (process.env.REDIS_OPTIONS_PASSWORD)
+                        ? process.env.REDIS_OPTIONS_PASSWORD
+                        : di.get('config')
+                            .get('Ext/Redis.options.password', Const_1.REDIS_CONFIG.options.password),
+                    db: (process.env.REDIS_OPTIONS_DB)
+                        ? process.env.REDIS_OPTIONS_DB
+                        : di.get('config')
+                            .get('Ext/Redis.options.db', Const_1.REDIS_CONFIG.options.db),
+                    keyPrefix: (process.env.REDIS_OPTIONS_KEY_PREFIX)
+                        ? process.env.REDIS_OPTIONS_KEY_PREFIX
+                        : di.get('config')
+                            .get('Ext/Redis.options.keyPrefix', Const_1.REDIS_CONFIG.options.keyPrefix)
+                };
             }
-            else if (typeof config.hosts !== 'undefined') {
-                return new ioredis_1.default.Cluster(config.hosts, { redisOptions: config.options });
-            }
-            else {
-                return new ioredis_1.default(Const_1.REDIS_CONFIG.port, Const_1.REDIS_CONFIG.host, Const_1.REDIS_CONFIG.options);
+            switch (config.type) {
+                case 'cluster':
+                    return new ioredis_1.default.Cluster(config.hosts, { redisOptions: config.options });
+                default:
+                    return new ioredis_1.default(config.port, config.host, ...config.options);
             }
         }, false);
         /* --------------------------------------------------------------------- */

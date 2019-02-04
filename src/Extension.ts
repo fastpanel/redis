@@ -9,7 +9,7 @@
 import Redis from 'ioredis';
 import Caporal from 'caporal';
 import { REDIS_CONFIG } from './Const';
-import { Cli, Di, Extensions } from '@fastpanel/core';
+import { Di, Extensions } from '@fastpanel/core';
 
 /**
  * Class Extension
@@ -30,30 +30,76 @@ export class Extension extends Extensions.ExtensionDefines {
         .get('config')
         .get('Ext/Redis', REDIS_CONFIG);
 
-      if (
-        typeof params.host !== 'undefined' || 
-        typeof params.hosts !== 'undefined'
-      ) {
+      if (typeof params.type !== 'undefined') {
         config = params;
+      } else if (typeof process.env.REDIS_TYPE !== 'undefined') {
+        switch (process.env.REDIS_TYPE) {
+          case 'cluster':
+            let hosts = [];
+            let hostsTmp = process.env.REDIS_HOSTS.split(';');
+
+            /* Get hosts list. */
+            for (const item of hostsTmp) {
+              let tmp = item.split(':');
+              if (tmp.length == 2) {
+                hosts.push({
+                  host: tmp[0],
+                  port: tmp[1]
+                });
+              }
+            }
+
+            /* Set params for "cluster" type. */
+            config = {
+              type: 'cluster',
+              hosts: hosts,
+              options: {}
+            };
+          break;
+          default:
+            /* Set params for "default" type. */
+            config = {
+              type: 'default',
+              host: process.env.REDIS_HOST,
+              port: process.env.REDIS_PORT,
+              options: {}
+            };
+          break;
+        }
+
+        /* Set common params. */
+        config.options = {
+          family: (process.env.REDIS_OPTIONS_FAMILY)
+            ? process.env.REDIS_OPTIONS_FAMILY
+            : di.get('config')
+            .get('Ext/Redis.options.family', REDIS_CONFIG.options.family),
+          password: (process.env.REDIS_OPTIONS_PASSWORD)
+            ? process.env.REDIS_OPTIONS_PASSWORD
+            : di.get('config')
+            .get('Ext/Redis.options.password', REDIS_CONFIG.options.password),
+          db: (process.env.REDIS_OPTIONS_DB)
+            ? process.env.REDIS_OPTIONS_DB
+            : di.get('config')
+            .get('Ext/Redis.options.db', REDIS_CONFIG.options.db),
+          keyPrefix: (process.env.REDIS_OPTIONS_KEY_PREFIX)
+            ? process.env.REDIS_OPTIONS_KEY_PREFIX
+            : di.get('config')
+            .get('Ext/Redis.options.keyPrefix', REDIS_CONFIG.options.keyPrefix)
+        }
       }
 
-      if (typeof config.host !== 'undefined') {
-        return new Redis(
-          (config.port) ? config.port : REDIS_CONFIG.port,
-          (config.host) ? config.host : REDIS_CONFIG.host,
-          (config.options) ? config.options : REDIS_CONFIG.options
-        );
-      } else if (typeof config.hosts !== 'undefined') {
-        return new Redis.Cluster(
-          config.hosts,
-          { redisOptions: config.options }
-        );
-      } else {
-        return new Redis(
-          REDIS_CONFIG.port,
-          REDIS_CONFIG.host,
-          REDIS_CONFIG.options
-        );
+      switch (config.type) {
+        case 'cluster':
+          return new Redis.Cluster(
+            config.hosts,
+            { redisOptions: config.options }
+          );
+        default:
+          return new Redis(
+            config.port,
+            config.host,
+            ...config.options
+          );
       }
     }, false);
     

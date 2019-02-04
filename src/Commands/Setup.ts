@@ -9,6 +9,7 @@
 import { EOL } from 'os';
 import Winston from 'winston';
 import { Cli } from '@fastpanel/core';
+import { join, merge } from 'lodash';
 import { REDIS_CONFIG } from './../Const';
 
 /**
@@ -33,7 +34,84 @@ export class Setup extends Cli.CommandDefines {
         logger.info(`${EOL}Configure redis components.`);
 
         if (!this.config.get('Ext/Redis', false) || options.force) {
-          
+          /* Prompts list. */
+          let questions = [
+            /* Redis connection type. */
+            {
+              type: 'list',
+              name: 'type',
+              message: 'Select the type of connection to the "redis" server?',
+              choices: ['default', 'cluster'],
+              default: this.config.get('Ext/Redis.type', REDIS_CONFIG.type)
+            },
+            /* Default host. */
+            {
+              type: 'input',
+              name: 'host',
+              message: 'Enter the address of the "redis" server.',
+              default: this.config.get('Ext/Redis.host', REDIS_CONFIG.host),
+              when (answers: any) {
+                return (answers.type == 'default');
+              }
+            },
+            /* Default port. */
+            {
+              type: 'input',
+              name: 'port',
+              message: 'Enter the port of the "redis" server.',
+              default: this.config.get('Ext/Redis.port', REDIS_CONFIG.port),
+              when (answers: any) {
+                return (answers.type == 'default');
+              }
+            },
+            /* Cluster hosts. */
+            {
+              type: 'input',
+              name: 'hosts',
+              message: 'Enter the address and port of the redis cluster separated by a semicolon.',
+              default: join(this.config.get('Ext/Redis.hosts', ['127.0.0.1:6379']), ';'),
+              when (answers: any) {
+                return (answers.type == 'cluster');
+              },
+              filter (val: string) {
+                let hosts = [];
+                let hostsTmp = val.split(';');
+
+                /* Get hosts list. */
+                for (const item of hostsTmp) {
+                  let tmp = item.split(':');
+                  if (tmp.length == 2) {
+                    hosts.push({
+                      host: tmp[0],
+                      port: tmp[1]
+                    });
+                  }
+                }
+
+                return hosts;
+              }
+            }
+          ];
+
+          /* Show prompts to user. */
+          let config = await this.prompt(questions);
+          config.options = {};
+
+          /* Prompts list. */
+          questions = [
+
+          ];
+
+          /* Show prompts to user. */
+          config.options = await this.prompt(questions);
+
+          /* Save data. */
+          this.config.set('Ext/Redis', config);
+          this.config.save('Ext/Redis', !(options.env));
+
+          /* Info message. */
+          logger.info(`${EOL}Applied:`);
+          logger.info('', this.config.get('Ext/Redis'));
         } else {
           /* Info message. */
           logger.info(` Everything is already configured. ${EOL}`);
