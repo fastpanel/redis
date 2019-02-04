@@ -98,7 +98,7 @@ export class Extension extends Extensions.ExtensionDefines {
           return new Redis(
             config.port,
             config.host,
-            ...config.options
+            config.options
           );
       }
     }, false);

@@ -89,7 +89,7 @@ class Extension extends core_1.Extensions.ExtensionDefines {
                 case 'cluster':
                     return new ioredis_1.default.Cluster(config.hosts, { redisOptions: config.options });
                 default:
-                    return new ioredis_1.default(config.port, config.host, ...config.options);
+                    return new ioredis_1.default(config.port, config.host, config.options);
             }
         }, false);
         /* --------------------------------------------------------------------- */
