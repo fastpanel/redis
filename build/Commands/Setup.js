@@ -32,8 +32,8 @@ class Setup extends core_1.Cli.CommandDefines {
                 logger.info(`${os_1.EOL}Configure redis components.`);
                 if (!this.config.get('Ext/Redis', false) || options.force) {
                     /* Prompts list. */
-                    let questions = [
-                        /* Redis connection type. */
+                    let queCommon = [
+                        /* Connection type. */
                         {
                             type: 'list',
                             name: 'type',
@@ -88,12 +88,41 @@ class Setup extends core_1.Cli.CommandDefines {
                         }
                     ];
                     /* Show prompts to user. */
-                    let config = await this.prompt(questions);
+                    let config = await this.prompt(queCommon);
                     config.options = {};
                     /* Prompts list. */
-                    questions = [];
+                    let queOptions = [
+                        /* Ip family. */
+                        {
+                            type: 'input',
+                            name: 'family',
+                            message: 'Redis ip family 4 or 6?',
+                            default: this.config.get('Ext/Redis.options.family', Const_1.REDIS_CONFIG.options.family)
+                        },
+                        /* Password. */
+                        {
+                            type: 'input',
+                            name: 'password',
+                            message: 'Redis connection password?',
+                            default: this.config.get('Ext/Redis.options.password', Const_1.REDIS_CONFIG.options.password)
+                        },
+                        /* DB index. */
+                        {
+                            type: 'input',
+                            name: 'db',
+                            message: 'Redis db index?',
+                            default: this.config.get('Ext/Redis.options.db', Const_1.REDIS_CONFIG.options.db)
+                        },
+                        /* Key prefix. */
+                        {
+                            type: 'input',
+                            name: 'keyPrefix',
+                            message: 'Redis key prefix?',
+                            default: this.config.get('Ext/Redis.options.keyPrefix', Const_1.REDIS_CONFIG.options.keyPrefix)
+                        }
+                    ];
                     /* Show prompts to user. */
-                    config.options = await this.prompt(questions);
+                    config.options = await this.prompt(queOptions);
                     /* Save data. */
                     this.config.set('Ext/Redis', config);
                     this.config.save('Ext/Redis', !(options.env));
