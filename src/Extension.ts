@@ -24,89 +24,87 @@ export class Extension extends Extensions.ExtensionDefines {
    * Registers a service provider.
    */
   async register () : Promise<any> {
-    /* Registered redis component. */
-    this.di.set('redis', (di: Di.Container, params: any) => {
-      let config: any = di
-        .get('config')
-        .get('Ext/Redis', REDIS_CONFIG);
+    /* Check config. */
+    if (this.config.get('Ext/Redis', false) ||
+      this.config.get('Env.REDIS_TYPE', false)) {
+      /* Registered redis component. */
+      this.di.set('redis', (di: Di.Container, params: any) => {
+        let config: any = this.config
+          .get('Ext/Redis', REDIS_CONFIG);
 
-      if (typeof params.type !== 'undefined') {
-        config = params;
-      } else if (typeof process.env.REDIS_TYPE !== 'undefined') {
-        switch (process.env.REDIS_TYPE) {
-          case 'cluster':
-            let hosts = [];
-            let hostsTmp = process.env.REDIS_HOSTS.split(';');
+        if (typeof params.type !== 'undefined') {
+          config = params;
+        } else if (this.config.get('Env.REDIS_TYPE', false)) {
+          switch (this.config.get('Env.REDIS_TYPE')) {
+            case 'cluster':
+              let hosts = [];
+              let hostsTmp = this.config.get('Env.REDIS_HOSTS', '').split(';');
 
-            /* Get hosts list. */
-            for (const item of hostsTmp) {
-              let tmp = item.split(':');
-              if (tmp.length == 2) {
-                hosts.push({
-                  host: tmp[0],
-                  port: tmp[1]
-                });
+              /* Get hosts list. */
+              for (const item of hostsTmp) {
+                let tmp = item.split(':');
+                if (tmp.length == 2) {
+                  hosts.push({
+                    host: tmp[0],
+                    port: tmp[1]
+                  });
+                }
               }
-            }
 
-            /* Set params for "cluster" type. */
-            config = {
-              type: 'cluster',
-              hosts: hosts,
-              options: {}
-            };
-          break;
+              /* Set params for "cluster" type. */
+              config = {
+                type: 'cluster',
+                hosts: hosts,
+                options: {}
+              };
+            break;
+            default:
+              /* Set params for "default" type. */
+              config = {
+                type: 'default',
+                host: this.config.get('Env.REDIS_HOST'),
+                port: this.config.get('Env.REDIS_PORT'),
+                options: {}
+              };
+            break;
+          }
+
+          /* Set common params. */
+          config.options = {
+            family: this.config.get('Env.REDIS_OPTIONS_FAMILY',
+              this.config.get('Ext/Redis.options.family', REDIS_CONFIG.options.family)),
+            password: this.config.get('Env.REDIS_OPTIONS_PASSWORD',
+              this.config.get('Ext/Redis.options.password', REDIS_CONFIG.options.password)),
+            db: this.config.get('Env.REDIS_OPTIONS_DB',
+              this.config.get('Ext/Redis.options.db', REDIS_CONFIG.options.db)),
+            keyPrefix: this.config.get('Env.REDIS_OPTIONS_KEY_PREFIX',
+              this.config.get('Ext/Redis.options.keyPrefix', REDIS_CONFIG.options.keyPrefix))
+          }
+        }
+
+        switch (config.type) {
+          case 'cluster':
+            return new Redis.Cluster(
+              config.hosts,
+              { redisOptions: config.options }
+            );
           default:
-            /* Set params for "default" type. */
-            config = {
-              type: 'default',
-              host: process.env.REDIS_HOST,
-              port: process.env.REDIS_PORT,
-              options: {}
-            };
-          break;
+            return new Redis(
+              config.port,
+              config.host,
+              config.options
+            );
         }
+      }, false);
+    } else {
+      this.logger.warn('Component "Redis" is not configured correctly!');
+    }
 
-        /* Set common params. */
-        config.options = {
-          family: (process.env.REDIS_OPTIONS_FAMILY)
-            ? process.env.REDIS_OPTIONS_FAMILY
-            : di.get('config')
-            .get('Ext/Redis.options.family', REDIS_CONFIG.options.family),
-          password: (process.env.REDIS_OPTIONS_PASSWORD)
-            ? process.env.REDIS_OPTIONS_PASSWORD
-            : di.get('config')
-            .get('Ext/Redis.options.password', REDIS_CONFIG.options.password),
-          db: (process.env.REDIS_OPTIONS_DB)
-            ? process.env.REDIS_OPTIONS_DB
-            : di.get('config')
-            .get('Ext/Redis.options.db', REDIS_CONFIG.options.db),
-          keyPrefix: (process.env.REDIS_OPTIONS_KEY_PREFIX)
-            ? process.env.REDIS_OPTIONS_KEY_PREFIX
-            : di.get('config')
-            .get('Ext/Redis.options.keyPrefix', REDIS_CONFIG.options.keyPrefix)
-        }
-      }
-
-      switch (config.type) {
-        case 'cluster':
-          return new Redis.Cluster(
-            config.hosts,
-            { redisOptions: config.options }
-          );
-        default:
-          return new Redis(
-            config.port,
-            config.host,
-            config.options
-          );
-      }
-    }, false);
-    
     /* --------------------------------------------------------------------- */
     
     /* Registered cli commands. */
     this.events.once('cli:getCommands', (cli: Caporal) => {
+      /* Add setup command. */
       const { Setup } = require('./Commands/Setup');
       (new Setup(this.di)).initialize();
     });
