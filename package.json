@@ -1,6 +1,6 @@
 {
   "name": "@fastpanel/redis",
-  "version": "0.2.1-alpha.1",
+  "version": "0.2.1-alpha.3",
   "description": "Extension to work with the \"Redis\" service.",
   "author": "Desionlab <fenixphp@gmail.com>",
   "main": "build/index.js",
@@ -34,7 +34,7 @@
     "ioredis": "^4.14.0"
   },
   "devDependencies": {
-    "@fastpanel/core": "^0.2.1-alpha.1",
+    "@fastpanel/core": "^0.2.1-alpha.3",
     "@types/chai": "^4.1.7",
     "@types/inquirer": "^6.5.0",
     "@types/ioredis": "^4.0.13",
